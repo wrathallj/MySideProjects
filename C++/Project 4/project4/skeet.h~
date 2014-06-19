@@ -1,0 +1,202 @@
+/***********************************************************************
+* Program:
+*    Project 2 Header, Skeet
+*    Jared Wrathall, CS165
+* Author:
+*    JARED WRATHALL
+************************************************************************/
+
+#include <string>
+#include <iostream>
+#include <cassert>
+#include <stdlib.h>
+#include "uiInteract.h"  // interface with OpenGL   
+#include "point.h"       // the ball has a position
+#include "uiDraw.h"      // all the draw primitives exist here
+#include <vector>
+
+using namespace std;
+
+/****************************************
+ * VECTOR
+ *  direction and speed of objects.
+ ***************************************/
+class Vector
+{
+  public:
+   Point & getPoint() { return point; }; // getter for the point
+   float getDx() { return dx; };         // get the x speed
+   float getDy() { return dy; };         // get the y speed
+   void setDx(float dx);                 // use to set the x speed
+   void setDy(float dy);                 // use to set the y speed
+   float getMag() { return sqrt(dx * dx + dy * dy); };
+   float operator - (Vector & rhs);      // figures out the min distance 
+   Vector operator + (Vector & rhs);     // adds the speeds together
+   Vector & operator += (float delta);   // adds to the speed by delta
+   Vector & operator ++ ();              // adds to the speed by one
+   Vector  operator ++(int postFix);     // adds afterwards by one
+   bool operator == (const Vector & rhs) const; // checks to see if they equal
+   Vector & operator = (Vector & rhs);   // sets to equal
+
+  private:
+   Point point;                          // holds the x and y coordinates
+   float dx;                             // speed going horizontal
+   float dy;                             // speed going verticle
+
+};
+
+/****************************************
+ * Rifle
+ *  Create the rifle, draw, and rotate it
+ ***************************************/
+class Rifle
+{
+   public:
+   Rifle();                              // rifle constructor
+   void move(int up, int down);          // moves the rifle up and down
+   void draw();                          // puts the rifle on screen
+   int getAngle() { return angle; };     // getter for angle
+    void setAngle(int angle) {this->angle = angle;};
+  private:
+   int angle;                            // angle of gun
+
+};
+
+/****************************************
+ * Bird
+ *  Create the bird, draw, and move it.
+ *  Stores the size of the bird and whether
+ *  it is dead or not.
+ ***************************************/
+class Bird
+{
+  public:
+   Bird();                               // bird constructor 
+   void advance();                       // moves the bird across the screen
+   void regen();                         // makes the bird spawn
+   void draw();                          // puts the bird on screen
+   void kill();                          // bye bye birdy
+   bool getIsDead() { return isDead; };  // gets if bird is dead
+   Vector & getVector() { return vector; }; // get the speed and points
+   int getBirdSize() { return birdSize; };
+   bool setIsDead(bool isDead) { this->isDead = isDead; }; // hey I hit that one
+   void setBirdSize(int birdSize) { this->birdSize = birdSize; };// set the bird size
+   // overloaded operators
+   Bird operator ++(int postFix);
+   Bird & operator +=(float delta);
+   Bird operator --(int postFix);
+   Bird & operator -=(float delta);
+   
+  private:
+   Vector vector;                        // the speed is stored in here
+   bool isDead;                          // does it have a pulse?
+   int birdSize;                         // size of the bird?
+   
+};
+
+/****************************************
+ * BULLET
+ *  Create the bullet, draw, move it,
+ *  and kill it.
+ *  
+ ***************************************/
+class Bullet
+{
+  public:
+   Bullet();                             // bullet constructor
+   void draw();                          // puts bullets on board
+   void advance();                       // moves the bullets
+   void fire(int angle);                 // fires the bullet
+   bool getIsDead() { return isDead; };  // is the bullet gone?
+   void setIsDead(bool isDead) { this->isDead = isDead; };  // sets bullet
+   void kill();                          // removes bullet
+   Vector & getVector() { return vector; } // getter for vector
+   
+
+  private:
+   Vector vector;                         // contains the speed
+   bool isDead;                           // is it in the screen?
+   
+   
+   
+  
+};
+
+/****************************************
+ * SCORE
+ *  Keep track of how many hits and misses
+ *  there are.
+ ***************************************/
+class Score
+{
+  public:
+   Score();                               // score constructor
+   void drawHit(int hit);                 // draws how many times it hits
+   void drawMiss (int miss);              // draws how many times you fail!
+   void advance(int hit, int miss);       // increases the scores
+   int getHit()           { return hit;  };
+   int getMiss()          { return miss; };
+   void setHit(int hit)   { this->hit  = hit;  };
+   void setMiss(int miss) { this->miss = miss; };
+
+   // overloaded operators
+   Score operator ++(int postFix);
+   Score & operator +=(float delta);
+   Score operator --(int postFix);
+   
+  private:
+   Point point;                           // sets position of score
+   int setLeft;                           // if score in 100's move the
+                                          // score to fit
+
+   int setRight;                          // location of the hit number
+   int hit;                               // how many times hit       
+   int miss;                              // how many times missed      
+};
+
+/*******************************************
+ * LEVEL
+ *  Level keeps track of how you are doing!!
+ ******************************************/
+class Level
+{
+  public:
+   Level();                               // Level constructor
+   void draw();                           // draws the level
+   string getLevel() { return level; };   // retrievs the level
+   void setLevel(string level) { this->level = level; };// sets the level
+   
+  private:
+   Point point;                           // point class
+   string level;                          // string to store the level
+   
+};
+
+/****************************************
+ * SKEET
+ *  Main skeet class
+ ***************************************/
+
+class Skeet
+{
+  public: 
+   Skeet();                               // skeet constructor
+   void draw();                           // puts all objects on screen
+   void interact(const Interface *pUI);   // handles the user interaction
+   void advance();                        // moves all objects on screen 
+  
+   
+  private:
+   Level level;
+   Rifle rifle;                           // the gun
+   Bird bird;                             // the skeet
+   Bullet bullet[5];                      // the bullets
+   Score score;                           // the score
+   vector <int> numBullets;               // how many bullets
+
+   
+};
+
+
+
+

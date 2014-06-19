@@ -1,0 +1,721 @@
+/***********************************************************************
+ * Program:
+ *    Project 2, Skeet
+ *    Brother Helfrich, CS165
+ * Author:
+ *    Jared Wrathall
+ * Summary: 
+ *    
+ *    Estimated:  25.0 hrs   
+ *    Actual:     0.0 hrs
+ *      Please describe briefly what was the most difficult part
+ ************************************************************************/
+
+#include <iostream>
+#include "skeet.h"
+#define deg2rad(value) ((M_PI / 180) * (value))
+#define MAX(x,y) ((x) > (y) ? (x) : (y))
+#define MIN(x,y) ((x) < (y) ? (x) : (y))
+
+
+/*************************************************
+ *************************************************
+ ********************SKEET************************
+ *************************************************
+ ************************************************/
+
+/*************************************************
+ * Skeet :: CONSTRUCTOR
+ ************************************************/
+Skeet::Skeet() 
+{
+   
+}
+
+/*************************************************
+ * SKEET : INTERACT
+ *      User interactions
+ ************************************************/
+void Skeet::interact(const Interface *pUI)
+{
+   // move the rifle if up is pressed or down
+   rifle.move(pUI->isUp(), pUI->isDown());     
+
+   // check what bullets are dead
+   for (int i = 0; i < numBullets.size(); i++)
+      if (bullet[i].getIsDead())
+         numBullets.pop_back();
+   
+   // check if space is pressed
+   if (pUI->isSpace())
+   {
+      // add to the amount of bullets on screen
+      numBullets.push_back(1);
+      
+      // make sure there are no more than 5 bullets on screen
+      if (numBullets.size() <= 5)
+      {
+         for (int i = 0; i < numBullets.size(); i++)
+            if (bullet[i].getIsDead())
+               bullet[i].fire(rifle.getAngle());
+      }
+   }
+    if (pUI->isRight())
+   {
+      int spread = rifle.getAngle();
+      
+      for (int j = 0; j <= 4; j++)
+      {
+         spread += 5;
+         // add to the amount of bullets on screen
+         numBullets.push_back(spread);
+      
+         // make sure there are no more than 5 bullets on screen
+         if (numBullets.size() <= 5)
+         {
+            for (int k = 0; k < numBullets.size(); k++)
+            {
+              
+               if (bullet[k].getIsDead())
+                  bullet[k].fire(numBullets[k]);
+            }
+         }
+      }
+   }
+}
+
+/**************************************************
+ * SKEET : ADVANCE
+ *      Just move the game along.
+ *************************************************/
+void Skeet :: advance()
+{
+   // loop through bullets
+   for (int i = 0; i < 5; i++)
+   {
+      if (bullet[i].getIsDead() == false)
+      {
+         bullet[i].advance();
+         if (bird.getBirdSize() > (bullet[i].getVector() - bird.getVector()))
+         {
+            bird.kill();
+            bullet[i].kill();
+            score++;
+            if (bird.getBirdSize() > 1)
+               bird--;
+         }
+      }
+   }
+  
+   // if bird is outside the screen, kill the bird
+   // and miss increases by one.
+   if (bird.getVector().getPoint().getX() >  135 ||
+       bird.getVector().getPoint().getY() >  135 ||
+       bird.getVector().getPoint().getY() < -135)
+   {
+      bird.kill();
+      score--;
+      bird++;
+   }
+   
+   // if bird is dead randomize when it regenerates
+   // between 0 and 30
+   if (bird.getIsDead() == true)
+   {
+      if (0 == random(0,30))
+         bird.regen();
+   }
+   
+   // if bird is alive advance the bird
+   else
+      bird.advance();
+   
+   // increase score accordingly
+   score.advance(score.getHit(),score.getMiss());
+
+   // depending on size of the bird
+   // change the level
+   if (bird.getBirdSize() >=17)
+      level.setLevel("? WHAT ?");
+   else if (bird.getBirdSize() <= 16 && bird.getBirdSize() >=15)
+      level.setLevel("Level -1");
+   else if (bird.getBirdSize() <= 14 && bird.getBirdSize() >= 12)
+      level.setLevel("Level 0");
+   else if(bird.getBirdSize() <= 11 && bird.getBirdSize() >= 9)
+      level.setLevel("Level 1");
+   else if(bird.getBirdSize() <= 8 && bird.getBirdSize() >= 6)
+      level.setLevel("Level 2");
+   else if(bird.getBirdSize() <= 5 && bird.getBirdSize() >= 4)
+      level.setLevel("Level 3");
+   else if(bird.getBirdSize() <= 4 && bird.getBirdSize() >= 3)
+      level.setLevel("Level 4");
+   else if(bird.getBirdSize() <= 2)
+      level.setLevel("WOW!!!");
+   // draw the level on the screen
+   level.draw();
+}
+
+/*************************************************
+ * SKEET : DRAW
+ *       Draw the stuff
+ ************************************************/
+void Skeet::draw()
+{
+   rifle.draw();     
+}
+
+
+
+/*************************************************
+ *************************************************
+ *******************RIFLE*************************
+ *************************************************
+ ************************************************/
+
+
+
+/*************************************************
+ * Rifle :: CONSTRUCTOR
+ ************************************************/
+Rifle::Rifle() 
+{
+   // set the angle in the beginning
+   angle = 45;
+}
+
+/*************************************************
+ * Rifle : DRAW
+ *      Draw the stuff
+ ************************************************/
+void Rifle::draw()
+{
+   // set the location of the rifle and then draw
+   // it in that location
+   Point rifle;
+   
+   rifle.setX(rifle.getXMax() - 1.0); 
+   rifle.setY(rifle.getYMin() + 1.0); 
+   drawRect(rifle, 4, 20 * 2, angle);
+   assert(rifle.getX() < 128);
+}
+
+/***************************************************
+ * RIFLE : MOVE
+ *      Change the angle of the rifle whether you
+ *      push the left, down, right, or up keys
+ **************************************************/
+void Rifle :: move(int up, int down)
+{
+   assert(angle < 95 && angle > -5);
+   // While pushing up
+   if (up && (angle > 0))
+   {
+      angle -= (up + 9) / 5;
+      
+   }
+   if (angle < 0)
+      angle = 0;
+   assert(angle < 91 && angle > -5);
+   // While pushing down
+   if (down && (angle < 90))
+   {
+      angle += (down + 9) / 5;
+   }
+   if (angle > 90)
+      angle = 90;
+   assert(angle < 91);
+}
+
+
+
+/*************************************************
+ *************************************************
+ *********************BIRD************************
+ *************************************************
+ ************************************************/
+ 
+ 
+
+/*************************************************
+ * BIRD :: CONSTRUCTOR
+ *      set dead to true in the beginning so it
+ *      does not just appear.
+ ************************************************/
+Bird :: Bird()
+{
+   vector.getPoint().setX(-145);
+   birdSize = 15;
+   isDead = true;
+}
+
+/*************************************************
+ * BIRD : DRAW
+ * Draw the stuff
+ ************************************************/
+void Bird::draw()
+{
+   // drawing the bird at each new location.
+   vector.getPoint().addX(vector.getDx()); 
+   vector.getPoint().addY(vector.getDy());
+   drawCircle(vector.getPoint(), birdSize, 20 * 2, 0);
+}
+
+/**************************************************
+ *BIRD : ADVANCE
+ *************************************************/
+void Bird :: advance()
+{
+   // move the bird across the screen. 
+   draw();
+}
+
+/*************************************************
+ * BIRD : REGEN
+ *      Draw the stuff after the bird has been
+ *      killed
+ ************************************************/
+void Bird::regen()
+{
+   // Start location on the X constant at the left
+   // side of the screen
+   vector.getPoint().setX(-128);
+   assert(vector.getPoint().getX() > -201);
+
+   // Start random for the Y location from bottom
+   // to the top
+   vector.getPoint().setY(random(-100,100));
+   
+   assert(vector.getPoint().getY() < 100 &&
+          vector.getPoint().getY() > -101);
+   
+
+   vector.setDx(random(3,6));
+   assert(vector.getDx() < 7 || vector.getDx() > 3); 
+
+   // move even or up if the random location is
+   // less than 0
+   assert(vector.getPoint().getY() > -128 ||
+          vector.getPoint().getY() < 128);
+   if (vector.getPoint().getY() > 0)
+      vector.setDy(random(-4,0));
+
+   // move even or down if the random location is
+   // grater than 0
+   
+   else
+      vector.setDy(random(0,4));
+   
+   isDead = false;
+   
+}
+
+/**********************************************
+ * BIRD : operator +=
+ *       
+ *********************************************/
+Bird & Bird:: operator +=(float delta)
+{
+   
+   birdSize = birdSize + delta;
+   return *this;   
+}
+
+/**********************************************
+ * SCORE : operator (a++)
+ *  Incrament the hit up by one.
+ *********************************************/
+Bird Bird :: operator ++(int postFix)
+{
+   Bird birdNew;
+   birdSize += 1;
+   return birdNew;   
+}
+
+/**********************************************
+ * BIRD : operator (a--)
+ *  Incrament the bird size by one.
+ *********************************************/
+Bird Bird:: operator --(int postFix)
+{
+   Bird birdNew;
+   birdSize -= 1;
+   return birdNew;   
+}
+
+/**********************************************
+ * BIRD : operator -=
+ *  Bird size will equal itself minus a variable.
+ *********************************************/
+Bird & Bird:: operator -=(float delta)
+{
+   
+   birdSize = birdSize - delta;
+   return *this;   
+}
+
+/**************************************************
+ * BIRD : KILL
+ *  DIE DIE DIE
+ *************************************************/
+void Bird :: kill()
+{
+
+   vector.getPoint().setX(-200);
+   vector.getPoint().setY(0);
+   vector.setDy(0);
+   vector.setDx(0);
+   isDead = true;
+   
+}
+
+/*************************************************
+ *************************************************
+ *******************BULLET************************
+ *************************************************
+ ************************************************/
+
+
+
+/************************************************
+ * BULLET : BULLET
+ *      Constructor
+ ***********************************************/ 
+Bullet :: Bullet()
+{
+   isDead = true;
+}
+
+/*************************************************
+ * BULLET : DRAW
+ *      Draw the stuff
+ ************************************************/
+void Bullet::draw()
+{
+   // draw the bullet in each location
+   vector.getPoint().addX(vector.getDx()); 
+   vector.getPoint().addY(vector.getDy());
+   drawDot(vector.getPoint());
+}
+
+/***********************************************
+ * BULLET : ADVANCE
+ *      Draw the bullet if the bullet reaches
+ *      the X min or the Y max.  Set the bullet
+ *      to dead.
+ **********************************************/
+void Bullet :: advance()
+{
+   draw();
+   
+   // if bullet is outside the bounds of the board.
+   if (vector.getPoint().getX() < -128 || vector.getPoint().getY() > 128)
+   {
+      isDead = true;
+   }
+}
+
+
+/***********************************************
+ * BULLET : FIRE
+ *      Set the speed of the bullet and which
+ *      angle it is supposed to go
+ **********************************************/
+void Bullet::fire(int angle)
+{
+   // set the speed of the bullet
+   int speedBullet = 10;
+   vector.getPoint().setX(127);   
+   vector.getPoint().setY(-127);
+   assert(vector.getPoint().getX() <  128 ||
+          vector.getPoint().getY() > -126);
+   
+   // set the direction of the bullet
+   vector.setDx(-sin (deg2rad(angle)) * speedBullet);
+   vector.setDy(cos(deg2rad(angle)) * speedBullet);
+   isDead = false;  
+}
+/**************************************************
+ * BULLET : KILL
+ *      Send the bullet out of bounds so it
+ *      dissapears
+ *************************************************/
+void Bullet :: kill()
+{
+   // set the location of dead bullets
+   vector.getPoint().setX(-200);
+   vector.getPoint().setY( 200);
+   vector.setDy(0);
+   vector.setDx(0);
+   isDead = true;
+}
+
+
+
+/**********************************************
+ **********************************************
+ ******************SCORE***********************
+ **********************************************
+ *********************************************/
+
+
+
+/**********************************************
+ * SCORE : Score
+ *       Constructor
+ *********************************************/
+Score :: Score()
+{
+   hit = 1;
+   miss = 1;
+   // set X start location of the scoreboards
+   setLeft = 110;
+   setRight = -120;
+}
+/**********************************************
+ * SCORE : ADVANCE
+ *       Advance each score accordingly
+ *********************************************/
+void Score :: advance(int hit, int miss)
+{
+   drawHit(hit);
+   drawMiss(miss);
+}
+
+/**********************************************
+ * SCORE : DRAWHIT 
+ *       Draw the hit score where it is supposed
+ *       to be
+ *********************************************/
+void Score :: drawHit(int hit)
+{
+   // hit should never be below 0
+   assert(hit >= 0);
+   // set the location of the hit score
+   point.setX(setRight); 
+   point.setY(125);
+   drawNumber(point,hit - 1);
+   
+}
+
+/**********************************************
+ * SCORE : DRAWMISS
+ *       Draw the miss score where it is supposed
+ *       to be
+ *********************************************/
+void Score :: drawMiss(int miss)
+{
+   // when the miss score gets to 10 shift the
+   // numbers miss location
+   assert(miss >= 0);
+   if (miss >= 10 && miss < 100)
+      setLeft = 100;
+   if (miss >= 100)
+      setLeft = 85;
+   // set the location of the miss score
+   point.setX(setLeft); 
+   point.setY(125);
+
+   // draw the number
+   drawNumber(point,miss - 1);
+   assert(point.getX() > -128);
+}
+
+/**********************************************
+ * SCORE : operator +=
+ *  Just add a variable on to the hit.
+ *********************************************/
+Score & Score:: operator +=(float delta)
+{
+   // hit plus a variable will now equal hit
+   hit = hit + delta;
+   return *this;   
+}
+
+/**********************************************
+ * SCORE : operator (a--) 
+ *  Incrament the miss up by 1.    
+ *********************************************/
+Score Score:: operator --(int postFix)
+{
+   Score scoreNew;
+   miss += 1;
+   return scoreNew;   
+}
+
+
+/**********************************************
+ * SCORE : operator (a++)
+ *  Incrament the hit up by one.
+ *********************************************/
+Score Score:: operator ++(int postFix)
+{
+   Score scoreNew;
+   hit += 1;
+   return scoreNew;   
+}
+
+
+
+/**********************************************
+ **********************************************
+ *****************VECTOR***********************
+ **********************************************
+ *********************************************/
+
+
+
+/**********************************************
+ * VECTOR : operator -
+ *       
+ *********************************************/
+float Vector:: operator - ( Vector &rhs) 
+{
+   float minDist = 2000.0; 
+   float distSquared;
+   float xDistSquared = 0.0;
+   float yDistSquared = 0.0;
+   float slice = 1/ MAX(MAX(abs(rhs.dx), abs(rhs.dy)),MAX(abs(dx),abs(dy)));
+   int i = 0;
+   
+   for (float per = 0; per < 1; per += slice)
+   {
+      // getting the X distance squared
+      xDistSquared = (((rhs.getPoint().getX() + rhs.dx * per) -
+                       (point.getX()          +     dx * per)));
+     
+      xDistSquared *= xDistSquared;
+    
+      // getting the Y distance squared
+      yDistSquared = (((rhs.getPoint().getY() + rhs.dy * per) -
+                       (point.getY()          +     dy * per)));
+     
+      yDistSquared *= yDistSquared;
+
+      // Setting the total distance squared
+      distSquared   = yDistSquared + xDistSquared;
+          
+      minDist = MIN(distSquared, minDist);
+   }
+   
+   return sqrt(minDist);
+}
+
+/**********************************************
+ * VECTOR : SETDX
+ *      Allow others to set the dx if needed.
+ *********************************************/
+void Vector :: setDx(float dx)
+{
+   this->dx = dx;
+}
+
+/*********************************************
+ * VECTOR : SET DY
+ *      Allows others to set the dy if needed.
+ ********************************************/
+void Vector :: setDy(float dy)
+{
+   this->dy = dy;
+}
+
+
+/**********************************************
+ * VECTOR : operator +
+ *       
+ *********************************************/
+Vector Vector:: operator +( Vector &rhs) 
+{
+   Vector newVector;
+   newVector.dx = rhs.dx + dx;
+   newVector.dy = rhs.dy + dy;
+   return newVector;
+}
+
+/**********************************************
+ * VECTOR : operator +
+ *       
+ *********************************************/
+Vector & Vector:: operator +=(float delta)
+{
+   
+   dx = dx + delta;
+   dy = dy + delta;
+   return *this;   
+}
+
+/**********************************************
+ * VECTOR : operator (a++) 
+ *       
+ *********************************************/
+Vector Vector:: operator ++(int postFix)
+{
+   Vector vectorNew;
+   vectorNew.dx += 1;
+   vectorNew.dy += 1;
+   return vectorNew;   
+}
+
+/**********************************************
+ * VECTOR : operator (++a) 
+ *       
+ *********************************************/
+Vector & Vector:: operator ++()
+{
+   dx += 1;
+   dy += 1;
+   return *this;   
+}
+
+/**********************************************
+ * VECTOR : OPERATOR == 
+ *       
+ *********************************************/
+bool Vector:: operator == (const Vector & rhs) const
+{
+   return (dx == rhs.dx && dy == dy);
+}
+
+/**********************************************
+ * VECTOR : OPERATOR = 
+ *       
+ *********************************************/
+Vector & Vector :: operator = (Vector & rhs) 
+{
+   dy = rhs.dy;
+   dx = rhs.dx;
+      
+   return *this; 
+}
+
+
+
+/***********************************************
+ *
+ *
+ **********************************************/
+Level :: Level()
+{
+   point.setX(-25);
+   point.setY(115);
+   level = "Level 1";
+}
+
+/***********************************************
+ *
+ *
+ **********************************************/
+void Level :: draw()
+{
+ 
+ 
+   char * x;
+   
+   x = (char*)level.c_str();
+
+   char * text[256];
+   text[0] = &x[0];
+ 
+   drawText(point, *text);
+}
+
+

@@ -1,0 +1,53 @@
+/***********************************************************************
+ * Program:
+ *    Skeet Shooter
+ * Author:
+ *    Jared Wrathall
+ * Summary:
+ *    
+ ***********************************************************************/
+
+#include "skeet.h"
+
+// set the bounds of the game
+float Point::xMin = -128.0;
+float Point::xMax =  128.0;
+float Point::yMin = -128.0;
+float Point::yMax =  128.0;
+
+/*********************************************
+ * CALLBACK
+ * The main interaction loop of the engine.
+ * This gets called from OpenGL.  It give us our
+ * interface pointer (where we get our events from)
+ * as well as a void pointer which we know is our
+ * game class.
+ *********************************************/
+void callBack(const Interface *pUI, void *p)
+{
+    Skeet *pSkeet = (Skeet *)p;
+   
+    //draw it
+    pSkeet->draw();
+    pSkeet->interact(pUI);
+    pSkeet->advance();
+}
+
+/*********************************
+ * MAIN
+ * initialize the drawing window, initialize
+ * the game,and run it!
+ *********************************/
+int main(int argc, char **argv)
+{
+   // Start the drawing
+   Interface ui(argc, argv, "Skeet!");
+
+   // play the game.  Our function callback will get called periodically
+   Skeet skeet;  
+   ui.run(callBack, (void *)&skeet);
+
+   return 0;
+}
+
+    
